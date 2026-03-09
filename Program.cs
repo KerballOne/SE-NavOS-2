@@ -116,21 +116,21 @@ const int printInterval = 10;
         private List<IMyGyro> gyros = new List<IMyGyro>();
         private IMyShipController controller;
 
-        private static StringBuilder debug;
+        private static readonly StringBuilder debug = new StringBuilder();
         private IMyTextSurface debugLcd;
         private IMyTextSurface consoleLcd;
         public static int counter = -1;
         private int idleCounter = 0;
 
         private IAimController aimController;
-        private Profiler profiler;
+        public static Profiler profiler;
         private WcPbApi wcApi;
         private bool wcApiActive = false;
         private VariableThrustController thrustController;
 
         private DateTime bootTime;
         public const string programName = "NavOS";
-        public const string versionStr = "2.15.1";
+        public const string versionStr = "2.16";
 
         public Config config;
 
@@ -177,7 +177,7 @@ const int printInterval = 10;
                 {
                     double desiredSpeed;
                     Vector3D target;
-                    RetroCruiseControl.RetroCruiseStage stage = RetroCruiseControl.RetroCruiseStage.None;
+                    RetroCruiseControl.CruiseStage stage = RetroCruiseControl.CruiseStage.None;
                     if (double.TryParse(args[1], out desiredSpeed) && Vector3D.TryParse(Storage, out target) && (args.Length < 3 || Enum.TryParse(args[2], out stage)))
                     {
                         InitRetroCruise(target, desiredSpeed, stage, false);
@@ -349,6 +349,7 @@ const int printInterval = 10;
 
             LoadConfig(false);
             config.PersistStateData = "";
+            Storage = "";
             SaveConfig();
         }
 
@@ -359,12 +360,12 @@ const int printInterval = 10;
             if (now == NavModeEnum.Sleep)
             {
                 Runtime.UpdateFrequency = UpdateFrequency.None;
-                optionalInfo = "Sleeping...";
+                //optionalInfo = "Sleeping...";
             }
             else if (old == NavModeEnum.Sleep)
             {
                 Runtime.UpdateFrequency = UpdateFrequency.Update1;
-                optionalInfo = "";
+                //optionalInfo = "";
             }
         }
 
@@ -426,8 +427,6 @@ const int printInterval = 10;
                 throw new Exception("No gyros");
 
             debugLcd = TryGetBlockWithName<IMyTextSurfaceProvider>(debugLcdName)?.GetSurface(0);
-            if (debugLcd != null)
-                debug = new StringBuilder();
             consoleLcd = TryGetBlockWithName<IMyTextSurfaceProvider>(config.ConsoleLcdName)?.GetSurface(0);
         }
 
@@ -456,23 +455,6 @@ const int printInterval = 10;
         {
             //PB Output
             const string programInfoStr = programName + " v" + versionStr + " | ";
-            const string commandStr = @"
-All Commands:
-Cruise <Speed> <distance>
-Cruise <Speed> <X:Y:Z>
-Cruise <Speed> <GPS>
-Retro/Retrograde
-Prograde
-Retroburn
-Match
-Orient <GPS>
-Abort
-ThrustRatio <ratio0to1>
-Thrust Set <ratio>
-CalibrateTurn
-Journey Load
-Journey Start
-";
             string avgRtStr = profiler.RunningAverageMs.ToString("0.0000");
 
             pbOut.Append(programInfoStr).Append(avgRtStr);
@@ -487,7 +469,11 @@ Journey Start
             }
 
             //placeholder - 
-            _cruiseController?.AppendStatus(pbOut);
+            if (_cruiseController != null)
+            {
+                pbOut.AppendLine();
+                _cruiseController?.AppendStatus(pbOut);
+            }
 
             pbOut.Append("\n-- Loaded Config --\n" +
                 nameof(config.MaxThrustOverrideRatio) + "=" + config.MaxThrustOverrideRatio.ToString() + "\n" +
@@ -501,14 +487,10 @@ Journey Start
                 nameof(config.Ship180TurnTimeSeconds) + "=" + config.Ship180TurnTimeSeconds.ToString() + "\n" +
                 nameof(config.MaintainDesiredSpeed) + "=" + config.MaintainDesiredSpeed.ToString() + "\n");
 
-            consoleLcd?.WriteText(pbOut);
-
             if (debugLcd != null)
                 pbOut.Append("\nDebug: ").Append(debugLcd != null);
-
-            pbOut.Append(commandStr)
-
-            .Append("\n-- Detected Blocks --")
+            
+            pbOut.Append("\n-- Detected Blocks --")
             .Append("\nConsoleLcd: " + (consoleLcd != null))
             .Append("\nDebugLcd: " + (debugLcd != null)).AppendLine()
             .Append(thrusters[Direction.Forward].Count + " Forward Thrusters\n")
@@ -524,8 +506,39 @@ Journey Start
             .Append("\nMax: " + profiler.MaxRuntimeMsFast);
 
             Echo(pbOut.ToString());
-
             pbOut.Clear();
+
+            if (consoleLcd != null && _cruiseController != null)
+            {
+                pbOut.AppendLine($"{_cruiseController.Name} | NavOS {versionStr} | {profiler.RunningAverageMs:0.000}\nStatus ------------------------");
+                int beforeLength = pbOut.Length;
+                _cruiseController?.AppendStatus(pbOut);
+                if (pbOut.Length == beforeLength)
+                {
+                    pbOut.AppendLine("Config ------------------------");
+                    pbOut.AppendLine($"  Max Thrust {thrustController.MaxForwardThrustRatio,18:0 %}");
+                    _cruiseController?.AppendStatus(pbOut);
+                }
+                if (!string.IsNullOrWhiteSpace(optionalInfo))
+                {
+                    pbOut.AppendLine("Additional Info ---------------");
+                    pbOut.AppendLine(optionalInfo);
+                }
+                consoleLcd?.WriteText(pbOut);
+                pbOut.Clear();
+            }
+            else if (consoleLcd != null)
+            {
+                pbOut.AppendLine($"{NavMode} | NavOS {versionStr} | {profiler.RunningAverageMs:0.000}\nStatus ------------------------");
+                if (!string.IsNullOrWhiteSpace(optionalInfo))
+                {
+                    pbOut.AppendLine(optionalInfo);
+                }
+                pbOut.AppendLine("Config ------------------------");
+                pbOut.AppendLine($"  Max Thrust {thrustController.MaxForwardThrustRatio,18:0 %}");
+                consoleLcd?.WriteText(pbOut);
+                pbOut.Clear();
+            }
         }
 
         public static string SecondsToDuration(double seconds, bool fractions = false)
@@ -550,8 +563,6 @@ Journey Start
             else return $"{minutes:00}:{seconds:00}";
         }
 
-        public static void Log(string message) => debug?.AppendLine(message);
-
-        public void SetStorage(string str) => Storage = str;
+        public static void Log(string message) => debug.AppendLine(message);
     }
 }

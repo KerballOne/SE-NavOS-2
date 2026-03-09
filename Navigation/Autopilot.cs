@@ -275,6 +275,9 @@ namespace IngameScript
             totalAccelRatio -= minThrust / approachThrust;
             totalDecelRatio -= minThrust / stoppingThrust;
 
+            totalAccelRatio = MathHelper.Saturate(totalAccelRatio);
+            totalDecelRatio = MathHelper.Saturate(totalDecelRatio);
+
             totalAccelRatio *= maxAccelRatio;
             totalDecelRatio *= maxDecelRatio;
 
@@ -334,7 +337,7 @@ namespace IngameScript
             }
         }
 
-        private static double ComputeTimeToDecel(double velocity, double displacement, double accel, double decel)
+        public static double ComputeTimeToDecel(double velocity, double displacement, double accel, double decel)
         {
             if (decel <= 0)
             {

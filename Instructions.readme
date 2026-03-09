@@ -1,4 +1,4 @@
-﻿NavOS v2.15.1 brought to you by StarCpt
+﻿NavOS v2.16 brought to you by StarCpt
 
 Config (In the customdata of the pb - Must recompile when modified!!):
 # PersistStateData: DO NOT TOUCH
@@ -34,7 +34,6 @@ Example:
 550 false GPS:StarCpt #3:-17933:48686:-29105:#FF75C9F1:
 150 true GPS:StarCpt #4:-17995:48270:-29421:#FF75C9F1:
 [Journey End]
-Note: The ship will be brought to a stop at the last waypoint regardless of the StopAtWaypoint flag
 
 Commands:
 # Cruise <DesiredSpeed> <ForwardDistanceMeters>
@@ -50,6 +49,10 @@ Example 2: Cruise 500 GPS:target:15000:70000:17000: false - won't use cruise off
 # Autopilot <DesiredSpeed> <ForwardDistanceMeters>
 # Autopilot <DesiredSpeed> <GPS> <Optional:UseCruiseOffset>
 Travels to the target gps (plus configured offsets) or specified forward distance using omnidirectional thrust without turning the ship.
+
+# Approach <DesiredSpeed>
+(WeaponCore only) Approaches the locked target and comes to a stop just outside its bounding box.
+IMPORTANT: This uses the position of the target at the time of the command. Use at your own risk if the target is moving.
 
 # Retro/Retrograde
 Points the ship in the opposite direction of travel

@@ -31,6 +31,7 @@ namespace IngameScript
                 { "thrust", CommandApplyThrust },
                 { "journey", CommandJourney },
                 { "autopilot", CommandAutopilot },
+                { "approach", CommandApproach },
             };
         }
 
@@ -117,14 +118,14 @@ namespace IngameScript
             }
         }
 
-        private void InitRetroCruise(Vector3D target, double speed, RetroCruiseControl.RetroCruiseStage stage = RetroCruiseControl.RetroCruiseStage.None, bool saveConfig = true)
+        private void InitRetroCruise(Vector3D target, double speed, RetroCruiseControl.CruiseStage stage = RetroCruiseControl.CruiseStage.None, bool saveConfig = true)
         {
             speed = Math.Min(speed, this.GetWorldMaxSpeed());
             thrustController.MaxForwardThrustRatio = (float)config.MaxThrustOverrideRatio;
             NavMode = NavModeEnum.Cruise;
             CruiseController = new RetroCruiseControl(target, speed, aimController, controller, gyros, thrustController, this, stage)
             {
-                decelStartMarginSeconds = config.Ship180TurnTimeSeconds * 1.5,
+                ShipFlipTimeInSeconds = config.Ship180TurnTimeSeconds * 1.5,
             };
             config.PersistStateData = $"{NavModeEnum.Cruise}|{speed}|{stage}";
             Storage = target.ToString();
@@ -293,6 +294,71 @@ namespace IngameScript
             {
                 optionalInfo = error;
             }
+        }
+
+        private void CommandApproach(CommandLine cmd)
+        {
+            if (cmd.Count < 2)
+            {
+                optionalInfo = "Approach speed argument not found";
+                return;
+            }
+
+            double approachSpeed;
+            if (!double.TryParse(cmd[1], out approachSpeed))
+            {
+                optionalInfo = "Could not parse speed argument";
+                return;
+            }
+
+            MyDetectedEntityInfo target = wcApi.GetAiFocus(Me.CubeGrid.EntityId) ?? default(MyDetectedEntityInfo);
+            if (target.IsEmpty())
+            {
+                optionalInfo = "No locked target";
+                return;
+            }
+
+            Vector3D targetPos = target.BoundingBox.Center;
+            double targetRadius = BoundingSphereD.CreateFromBoundingBox(target.BoundingBox).Radius;
+
+            // my radius + target radius
+            double minRadius = Me.CubeGrid.WorldVolume.Radius + targetRadius;
+
+            Vector3D myPos = Me.CubeGrid.WorldAABB.Center;
+
+            if (Vector3D.DistanceSquared(targetPos, myPos) < (minRadius * minRadius))
+            {
+                optionalInfo = "Too close to target";
+                return;
+            }
+
+            Vector3D targetDir = Vector3D.Normalize(targetPos - myPos);
+
+            // perpendicular offset dir
+            Vector3D offsetDir = Vector3D.CalculatePerpendicularVector(targetDir);
+
+            // if the target is moving, attempt to avoid crashing into it by picking the opposite direction
+            if (target.Velocity.LengthSquared() > 1 && Vector3D.Dot(offsetDir, target.Velocity) > 0)
+            {
+                offsetDir = -offsetDir;
+            }
+
+            Vector3D navTarget = targetPos + offsetDir * minRadius;
+
+            // attempt to find closer intersection with minRadius sphere
+            Vector3D navTargetDir = Vector3D.Normalize(navTarget - myPos);
+            double? closestIntersection = new RayD(myPos, navTargetDir).Intersects(new BoundingSphereD(targetPos, minRadius));
+
+            if (closestIntersection.HasValue)
+            {
+                navTarget = myPos + navTargetDir * closestIntersection.Value;
+            }
+
+            AbortNav(false);
+            optionalInfo = "";
+
+            optionalInfo = $"Approaching target {target.Name}";
+            InitRetroCruise(navTarget, approachSpeed);
         }
 
         private void InitAutopilot(Vector3D target, double speed, bool saveConfig = true)
