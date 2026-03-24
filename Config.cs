@@ -183,7 +183,7 @@ namespace IngameScript
             strb.AppendLine($"{nameof(MaxThrustOverrideRatio)}={MaxThrustOverrideRatio}");
             strb.AppendLine($"{nameof(IgnoreMaxThrustForSpeedMatch)}={IgnoreMaxThrustForSpeedMatch}");
             strb.AppendLine();
-            strb.AppendLine("// Prograde and Retrograde vectors continuously calculated.  Experimental: For heavy subgrids offset from CoM, set to False to use the vectors defined at the start of execution.  default=True");
+            strb.AppendLine("// Velocity vectors continuously calculated. default=True");
             strb.AppendLine($"{nameof(ContinuousVectorScan)}={ContinuousVectorScan}");
             strb.AppendLine();
             strb.AppendLine("// Tag for the controller used for ship orientation");
