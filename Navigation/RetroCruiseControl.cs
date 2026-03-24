@@ -102,8 +102,6 @@ namespace IngameScript
         // decel variables
         private double _decelTime;
         private double _decelDist;
-        private Vector3D _decelAimDir = Vector3D.Zero;
-        private Vector3D _overshotAimDir = Vector3D.Zero;
 
         //updated every tick
         private double _targetDist;
@@ -480,12 +478,6 @@ namespace IngameScript
                 else
                 {
                     Vector3D aimDir = -currentVelocity.Normalized();
-                    if (_decelAimDir == Vector3D.Zero || stageChanged)
-                        _decelAimDir = aimDir;
-
-                    if (!_config.ContinuousVectorScan)
-                        aimDir = _decelAimDir;
-
                     Orient(aimDir);
                     bool onTarget = Vector3D.Dot(aimDir, _controller.WorldMatrix.Forward) > AIM_ONTARGET_ANGLE_COS;
 
@@ -578,12 +570,6 @@ namespace IngameScript
             if (_stage == CruiseStage.Overshoot || _stage == CruiseStage.ExcessivePerpVel)
             {
                 Vector3D desiredAimDir = -currentVelocity.Normalized();
-                if (_overshotAimDir == Vector3D.Zero || stageChanged)
-                    _overshotAimDir = desiredAimDir;
-
-                if (!_config.ContinuousVectorScan)
-                    desiredAimDir = _overshotAimDir;
-
                 Orient(desiredAimDir);
                 bool onTarget = Vector3D.Dot(desiredAimDir, _controller.WorldMatrix.Forward) > AIM_ONTARGET_ANGLE_COS;
 
