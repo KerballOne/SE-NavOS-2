@@ -25,8 +25,6 @@ This field is not calculated automatically, run CalibrateTurn to calculate this 
 
 # MaintainDesiredSpeed: Keeps the ship oriented to the target during cruise and maintains the desired speed if possible (resists RTS friction) until deceleration time.
 
-# ContinuousVectorScan (Experimental!) default=True; If perpetually spinning when trying to orient to a shifting velocity vector (prograde/retrograde), often caused by a heavy subgrid offset from the grid's CoM, set this to False to use only the prograde/retrograde vectors defined at the start of execution or stage.  
-
 # [Journey Start] and [Journey End] (Experimental!)
 This is where journey data is input. Waypoint Format: <DesiredSpeed> <StopAtWaypoint> <GPS>
 StopAtWaypoint: Whether to stop at the destination or pass thru the point at speed
