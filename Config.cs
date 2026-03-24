@@ -28,6 +28,7 @@ namespace IngameScript
         public double CruiseOffsetSideDist { get; set; } = 500;
         public double Ship180TurnTimeSeconds { get; set; } = 10.0;
         public bool MaintainDesiredSpeed { get; set; } = true;
+        public bool ContinuousVectorScan { get; set; } = false;
         public List<string> JourneySetup { get; } = new List<string>();
 
         private Config() { }
@@ -82,6 +83,13 @@ namespace IngameScript
                 bool val;
                 if (bool.TryParse(result, out val))
                     conf.IgnoreMaxThrustForSpeedMatch = val;
+            }
+
+            if (confValues.TryGetValue(nameof(ContinuousVectorScan), out result))
+            {
+                bool val;
+                if (bool.TryParse(result, out val))
+                    conf.ContinuousVectorScan = val;
             }
 
             if (confValues.TryGetValue(nameof(ShipControllerTag), out result))
@@ -174,6 +182,9 @@ namespace IngameScript
             strb.AppendLine("// Maximum thrust override. 0 to 1 (Dont use 0)");
             strb.AppendLine($"{nameof(MaxThrustOverrideRatio)}={MaxThrustOverrideRatio}");
             strb.AppendLine($"{nameof(IgnoreMaxThrustForSpeedMatch)}={IgnoreMaxThrustForSpeedMatch}");
+            strb.AppendLine();
+            strb.AppendLine("// Prograde and Retrograde vectors continuously calculated.  Experimental: For heavy subgrids offset from CoM, set to False to use the vectors defined at the start of execution.  default=True");
+            strb.AppendLine($"{nameof(ContinuousVectorScan)}={ContinuousVectorScan}");
             strb.AppendLine();
             strb.AppendLine("// Tag for the controller used for ship orientation");
             strb.AppendLine($"{nameof(ShipControllerTag)}={ShipControllerTag}");

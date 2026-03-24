@@ -140,7 +140,7 @@ namespace IngameScript
             AbortNav(false);
             optionalInfo = "";
             NavMode = NavModeEnum.Retrograde;
-            CruiseController = new Retrograde(aimController, controller, gyros);
+            CruiseController = new Retrograde(aimController, controller, gyros, this);
             config.PersistStateData = $"{NavModeEnum.Retrograde}";
             SaveConfig();
         }
@@ -151,7 +151,7 @@ namespace IngameScript
             optionalInfo = "";
             thrustController.MaxForwardThrustRatio = (float)config.MaxThrustOverrideRatio;
             NavMode = NavModeEnum.Retroburn;
-            CruiseController = new Retroburn(aimController, controller, gyros, thrustController);
+            CruiseController = new Retroburn(aimController, controller, gyros, thrustController, this);
             config.PersistStateData = $"{NavModeEnum.Retroburn}";
             SaveConfig();
         }
@@ -161,7 +161,7 @@ namespace IngameScript
             AbortNav(false);
             optionalInfo = "";
             NavMode = NavModeEnum.Prograde;
-            CruiseController = new Prograde(aimController, controller, gyros);
+            CruiseController = new Prograde(aimController, controller, gyros, this);
             config.PersistStateData = $"{NavModeEnum.Prograde}";
             SaveConfig();
         }

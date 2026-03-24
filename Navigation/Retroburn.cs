@@ -24,6 +24,9 @@ namespace IngameScript
     {
         const double ORIENT_SPEED_THRESHOLD = 5; // don't orient under this speed since it can make the ship turn violently
         const float DAMPENER_TOLERANCE = 0.005f;
+        private Vector3D shipVelocity = Vector3D.Zero;
+        private readonly Program _program;
+        private readonly Config _config;
 
         public override string Name => nameof(Retroburn);
 
@@ -34,10 +37,13 @@ namespace IngameScript
             IAimController aimControl,
             IMyShipController controller,
             List<IMyGyro> gyros,
-            VariableThrustController thrustController)
+            VariableThrustController thrustController,
+            Program program)
             : base(aimControl, controller, gyros)
         {
             this.thrustController = thrustController;
+            this._program = program;
+            this._config = program.config;
         }
 
         public override void Run()
@@ -48,8 +54,10 @@ namespace IngameScript
                 thrustController.UpdateThrusts();
             }
 
-            Vector3D shipVelocity = ShipController.GetShipVelocities().LinearVelocity;
-            double velocitySq = shipVelocity.LengthSquared();
+            if (shipVelocity == Vector3D.Zero || _config.ContinuousVectorScan)
+                shipVelocity = ShipController.GetShipVelocities().LinearVelocity;
+
+            double velocitySq = ShipController.GetShipVelocities().LinearVelocity.LengthSquared();
 
             Vector3D gravity = ShipController.GetNaturalGravity();
 
@@ -60,7 +68,9 @@ namespace IngameScript
             else
                 ResetGyroOverride();
 
-            if (Program.counter % 10 == 0)
+            if (!_config.ContinuousVectorScan && Program.counter % 10 == 0)
+                ShipController.DampenersOverride = true;
+            else if (Program.counter % 10 == 0)
             {
                 ShipController.DampenersOverride = false;
 

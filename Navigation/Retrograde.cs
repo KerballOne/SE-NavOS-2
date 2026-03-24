@@ -23,19 +23,25 @@ namespace IngameScript
     public class Retrograde : Orient
     {
         const double TERMINATE_SPEED = 5;
+        private Vector3D shipVelocity = Vector3D.Zero;
+        private readonly Program _program;
+        private readonly Config _config;
 
         public override string Name => nameof(Retrograde);
 
-        public Retrograde(IAimController aimControl, IMyShipController controller, IList<IMyGyro> gyros)
+        public Retrograde(IAimController aimControl, IMyShipController controller, IList<IMyGyro> gyros, Program program)
             : base(aimControl, controller, gyros)
         {
+            this._program = program;
+            this._config = program.config;
         }
 
         public override void Run()
         {
-            Vector3D shipVelocity = ShipController.GetShipVelocities().LinearVelocity;
+            if (shipVelocity == Vector3D.Zero || _config.ContinuousVectorScan)
+                shipVelocity = ShipController.GetShipVelocities().LinearVelocity;
 
-            if (shipVelocity.LengthSquared() <= TERMINATE_SPEED * TERMINATE_SPEED)
+            if (ShipController.GetShipVelocities().LinearVelocity.LengthSquared() <= TERMINATE_SPEED * TERMINATE_SPEED)
             {
                 Terminate($"Speed is less than {TERMINATE_SPEED:0.#} m/s");
                 return;
