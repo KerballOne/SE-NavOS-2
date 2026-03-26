@@ -23,17 +23,22 @@ namespace IngameScript
     public class Prograde : Orient
     {
         private const double TERMINATE_SPEED = 5;
-
+        readonly bool _useCurrentVectorOnly;
+        Vector3D initVelocity = Vector3D.Zero;
         public override string Name => nameof(Prograde);
 
-        public Prograde(IAimController aimControl, IMyShipController controller, IList<IMyGyro> gyros)
+        public Prograde(IAimController aimControl, IMyShipController controller, IList<IMyGyro> gyros, bool useCurrentVectorOnly)
             : base(aimControl, controller, gyros)
         {
+            this._useCurrentVectorOnly = useCurrentVectorOnly;
         }
 
         public override void Run()
         {
             Vector3D shipVelocity = ShipController.GetShipVelocities().LinearVelocity;
+
+            if (initVelocity == Vector3D.Zero)
+                initVelocity = shipVelocity;
 
             if (shipVelocity.LengthSquared() <= TERMINATE_SPEED * TERMINATE_SPEED)
             {
@@ -41,7 +46,7 @@ namespace IngameScript
                 return;
             }
 
-            Orient(shipVelocity);
+            Orient(_useCurrentVectorOnly ? initVelocity : shipVelocity);
         }
     }
 }

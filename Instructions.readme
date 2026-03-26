@@ -54,20 +54,24 @@ Travels to the target gps (plus configured offsets) or specified forward distanc
 (WeaponCore only) Approaches the locked target and comes to a stop just outside its bounding box.
 IMPORTANT: This uses the position of the target at the time of the command. Use at your own risk if the target is moving.
 
-# Retro/Retrograde
+# Prograde <Optional:CurrentVectorOnly|CVO>
+Points the ship in the direction of travel
+
+# Retro/Retrograde <Optional:CurrentVectorOnly|CVO>
 Points the ship in the opposite direction of travel
 
-# Prograde
-Points the ship in the direction of travel
+# Retroburn <Optional:CurrentVectorOnly|CVO>
+Points the ship to retrograde and stops the ship
+
+## Optional argument: CurrentVectorOnly or CVO
+For the above commands will orient to the vector that existed at the start of execution instead of continously updating.
+Useful when orienting is not possible due to heavy subgrids far offset from the center of mass imparting translational velocity when turning with gyros.
 
 # RadialIn
 Orient toward natural gravity
 
 # RadialOut
 Orient away from natural gravity
-
-# Retroburn
-Points the ship to retrograde and stops the ship
 
 # Match
 Matches speed to CURRENT WeaponCore lock, stays on that target even if locked target changes.

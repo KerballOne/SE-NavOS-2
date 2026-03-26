@@ -20,9 +20,9 @@ namespace IngameScript
                 { "reload", CommandReload },
                 { "maxthrustoverrideratio", CommandSetThrustRatio }, { "thrustratio", CommandSetThrustRatio },
                 { "cruise", CommandCruise },
-                { "retro", cmd => CommandRetrograde() }, { "retrograde", cmd => CommandRetrograde() },
-                { "retroburn", cmd => CommandRetroburn() },
-                { "prograde", cmd => CommandPrograde() },
+                { "retro", CommandRetrograde }, { "retrograde", CommandRetrograde },
+                { "retroburn", CommandRetroburn },
+                { "prograde", CommandPrograde },
                 { "radialin", _ => CommandRadialIn() },
                 { "radialout", _ => CommandRadialOut() },
                 { "match", cmd => CommandSpeedMatch() }, { "speedmatch", cmd => CommandSpeedMatch() },
@@ -134,34 +134,43 @@ namespace IngameScript
                 SaveConfig();
             }
         }
-
-        private void CommandRetrograde()
+        
+        private void CommandRetrograde(CommandLine cmd)
         {
             AbortNav(false);
             optionalInfo = "";
             NavMode = NavModeEnum.Retrograde;
-            CruiseController = new Retrograde(aimController, controller, gyros);
+            if (cmd.Count >= 2 && ( cmd[1].ToLower() == "currentvectoronly" || cmd[1].ToLower() == "cvo"))
+                useCurrentVectorOnly = true;
+
+            CruiseController = new Retrograde(aimController, controller, gyros, useCurrentVectorOnly);
             config.PersistStateData = $"{NavModeEnum.Retrograde}";
             SaveConfig();
         }
 
-        private void CommandRetroburn()
+        private void CommandRetroburn(CommandLine cmd)
         {
             AbortNav(false);
             optionalInfo = "";
             thrustController.MaxForwardThrustRatio = (float)config.MaxThrustOverrideRatio;
             NavMode = NavModeEnum.Retroburn;
-            CruiseController = new Retroburn(aimController, controller, gyros, thrustController);
+            if (cmd.Count >= 2 && (cmd[1].ToLower() == "currentvectoronly" || cmd[1].ToLower() == "cvo"))
+                useCurrentVectorOnly = true;
+
+            CruiseController = new Retroburn(aimController, controller, gyros, thrustController, useCurrentVectorOnly);
             config.PersistStateData = $"{NavModeEnum.Retroburn}";
             SaveConfig();
         }
 
-        private void CommandPrograde()
+        private void CommandPrograde(CommandLine cmd)
         {
             AbortNav(false);
             optionalInfo = "";
             NavMode = NavModeEnum.Prograde;
-            CruiseController = new Prograde(aimController, controller, gyros);
+            if (cmd.Count >= 2 && (cmd[1].ToLower() == "currentvectoronly" || cmd[1].ToLower() == "cvo"))
+                useCurrentVectorOnly = true;
+
+            CruiseController = new Prograde(aimController, controller, gyros, useCurrentVectorOnly);
             config.PersistStateData = $"{NavModeEnum.Prograde}";
             SaveConfig();
         }

@@ -115,6 +115,7 @@ const int printInterval = 10;
         };
         private List<IMyGyro> gyros = new List<IMyGyro>();
         private IMyShipController controller;
+        public static bool useCurrentVectorOnly = false; // false by default
 
         private static readonly StringBuilder debug = new StringBuilder();
         private IMyTextSurface debugLcd;
@@ -170,6 +171,8 @@ const int printInterval = 10;
 
             AbortNav(false);
 
+            CommandLine nullArg = new CommandLine("");
+
             try
             {
                 string stateStr = null;
@@ -199,17 +202,17 @@ const int printInterval = 10;
                 }
                 else if (mode == NavModeEnum.Retrograde)
                 {
-                    CommandRetrograde();
+                    CommandRetrograde(nullArg);
                     stateStr = mode.ToString();
                 }
                 else if (mode == NavModeEnum.Retroburn)
                 {
-                    CommandRetroburn();
+                    CommandRetroburn(nullArg);
                     stateStr = mode.ToString();
                 }
                 else if (mode == NavModeEnum.Prograde)
                 {
-                    CommandPrograde();
+                    CommandPrograde(nullArg);
                     stateStr = mode.ToString();
                 }
                 else if (mode == NavModeEnum.Orient)

@@ -24,7 +24,8 @@ namespace IngameScript
     {
         const double ORIENT_SPEED_THRESHOLD = 5; // don't orient under this speed since it can make the ship turn violently
         const float DAMPENER_TOLERANCE = 0.005f;
-
+        readonly bool _useCurrentVectorOnly;
+        Vector3D initVelocity = Vector3D.Zero;
         public override string Name => nameof(Retroburn);
 
         private VariableThrustController thrustController;
@@ -34,10 +35,12 @@ namespace IngameScript
             IAimController aimControl,
             IMyShipController controller,
             List<IMyGyro> gyros,
-            VariableThrustController thrustController)
+            VariableThrustController thrustController,
+            bool useCurrentVectorOnly)
             : base(aimControl, controller, gyros)
         {
             this.thrustController = thrustController;
+            this._useCurrentVectorOnly = useCurrentVectorOnly;
         }
 
         public override void Run()
@@ -49,12 +52,16 @@ namespace IngameScript
             }
 
             Vector3D shipVelocity = ShipController.GetShipVelocities().LinearVelocity;
+
+            if (initVelocity == Vector3D.Zero)
+                initVelocity = shipVelocity;
+
             double velocitySq = shipVelocity.LengthSquared();
 
             Vector3D gravity = ShipController.GetNaturalGravity();
 
             if (velocitySq > ORIENT_SPEED_THRESHOLD * ORIENT_SPEED_THRESHOLD)
-                Orient(-shipVelocity);
+                Orient(_useCurrentVectorOnly ? -initVelocity : -shipVelocity);
             else if (gravity != Vector3D.Zero)
                 Orient(-gravity);
             else
